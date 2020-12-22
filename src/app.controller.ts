@@ -24,7 +24,7 @@ export class AppController {
     // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
     // /test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 awb-mode=tungsten preview=false ! video/x-h264, width=640, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"
 
-    const commend = `raspivid -t 999999 -h 720 -w 1080 -fps 25 -b 2000000 -o - | gst-launch-1.0 -v fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=${ip} port=5000`;
+    const commend = `ps -ef | grep 'gst-launch-1.0' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && raspivid -t 999999 -h 720 -w 1080 -fps 25 -b 2000000 -o - | gst-launch-1.0 -v fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=${ip} port=5000`;
     console.log("will start", commend);
     exec(commend, function(error, stdout, stderr) {
       console.log("stdout: " + stdout);
@@ -94,7 +94,12 @@ export class AppController {
     if (!ip) {
       ip = req.query.ip;
     }
-    await this.stopVideo();
+    // try {
+    //   await this.stopVideo();
+    // } catch (ex) {
+    //   console.log("ex!!");
+    // }
+
     await this.startVideo(ip);
 
     res.json({
