@@ -22,7 +22,7 @@ export class AppController {
 
 
   async startTcp() {
-    const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=720, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+    const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=640, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
     exec(commend, function(error, stdout, stderr) {
       console.log("stdout: " + stdout);
       console.log("stderr: " + stderr);
