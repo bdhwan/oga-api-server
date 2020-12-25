@@ -4,11 +4,14 @@ import { AppService } from "./app.service";
 const exec = require("child_process").exec;
 const Gpio = require("onoff").Gpio; // Gpio class
 const led = new Gpio(21, "out");
-
+const fs = require("fs");
+const nconf = require("nconf");
 @Controller()
 export class AppController {
   width = 640;
   height = 480;
+
+  confPath = "/home/pi/oga-api-server/config.json";
 
   // ps -ef | grep -v grep | grep test-launch
   constructor(private readonly appService: AppService) {
@@ -16,15 +19,52 @@ export class AppController {
   }
 
   async startServer() {
+    nconf
+      .argv()
+      .env()
+      .file({ file: this.confPath });
+
     const ledResult = await led.read();
     console.log("ledResult", ledResult);
     await this.startTcp();
   }
 
+  async saveConf() {
+    nconf.save(function(err) {
+      fs.readFile(this.confPath, function(err, data) {
+        console.dir(JSON.parse(data.toString()));
+      });
+    });
+  }
+
   async startTcp() {
+    if (!nconf.get("width")) {
+      nconf.set("width", 640);
+    }
+    if (!nconf.get("height")) {
+      nconf.set("height", 480);
+    }
+
+    this.width = nconf.get("width");
+    this.height = nconf.get("height");
+
+    //
+    // Get the entire database object from nconf. This will output
+    // { host: '127.0.0.1', port: 5984 }
+    //
+
+    console.log(
+      "will startTcp width =" + this.width + ", height=" + this.height
+    );
+
     await led.write(0);
+
     const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+
+    console.log("commend =", commend);
+
     const result = await this.runCommend(commend);
+
     await led.write(1);
     return true;
   }
@@ -116,6 +156,12 @@ export class AppController {
     // await this.startVideo(ip);
     this.width = req.query.width;
     this.height = req.query.height;
+    console.log("will set =", this.width, this.height);
+    nconf.set("width", this.width);
+    nconf.set("height", this.height);
+
+    this.saveConf();
+
     await this.startTcp();
 
     res.json({
@@ -143,7 +189,6 @@ export class AppController {
     // }
 
     // await this.startVideo(ip);
-
     res.json({
       check: true,
       ip,
@@ -152,19 +197,20 @@ export class AppController {
 
   @Get("update")
   async update(@Req() req, @Res() res) {
-
+    console.log("update");
     let commend = `sh /home/pi/oga-api-server/update.sh`;
-    
+
     const result = await this.runCommend(commend);
     res.json({
       check: true,
-      result
+      result,
     });
+
+    console.log("will restart");
 
     await led.write(0);
     commend = `sh /home/pi/oga-api-server/restart.sh`;
     await this.runCommend(commend);
-
   }
 
   runCommend(commend: string) {
