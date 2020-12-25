@@ -12,8 +12,8 @@ const logPath = "/home/pi/oga-api-server/log.txt";
 @Controller()
 export class AppController {
 
-  width = 760;
-  height = 560;
+  width = 640;
+  height = 400;
 
   // ps -ef | grep -v grep | grep test-launch
   constructor(private readonly appService: AppService) {
@@ -45,10 +45,10 @@ export class AppController {
 
   async startTcp() {
     if (!nconf.get("width")) {
-      nconf.set("width", 760);
+      nconf.set("width", 640);
     }
     if (!nconf.get("height")) {
-      nconf.set("height", 560);
+      nconf.set("height", 400);
     }
 
     this.width = nconf.get("width");
