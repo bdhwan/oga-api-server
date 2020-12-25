@@ -2,4 +2,4 @@
 echo "start restart"
 pm2 restart all
 echo "done restart"
-exit(0)
+exit 0

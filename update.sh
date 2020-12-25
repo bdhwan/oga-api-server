@@ -4,4 +4,4 @@ git pull
 npm install
 npm run build
 echo "done update"
-exit(0)
+exit 0
