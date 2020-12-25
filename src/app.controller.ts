@@ -11,8 +11,9 @@ const logPath = "/home/pi/oga-api-server/log.txt";
 
 @Controller()
 export class AppController {
-  width = 640;
-  height = 480;
+
+  width = 760;
+  height = 560;
 
   // ps -ef | grep -v grep | grep test-launch
   constructor(private readonly appService: AppService) {
@@ -44,10 +45,10 @@ export class AppController {
 
   async startTcp() {
     if (!nconf.get("width")) {
-      nconf.set("width", 640);
+      nconf.set("width", 760);
     }
     if (!nconf.get("height")) {
-      nconf.set("height", 480);
+      nconf.set("height", 560);
     }
 
     this.width = nconf.get("width");
@@ -58,14 +59,14 @@ export class AppController {
 
     try {
       // const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-      const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > ${logPath} 2>&1 &`;
+      const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc -rot 90 bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > ${logPath} 2>&1 &`;
       console.log("commend =", commend);
       const result = await this.runCommend(commend);
     } catch (ex) {
       console.log("startTcp ex =", ex);
     }
 
-    console.log('startTcp will return true');
+    console.log("startTcp will return true");
 
     await led.write(1);
     return true;
@@ -80,7 +81,7 @@ export class AppController {
     } catch (ex) {
       console.log("startTcp ex =", ex);
     }
-    console.log('stopTcp will return true');
+    console.log("stopTcp will return true");
 
     return true;
   }
@@ -138,17 +139,22 @@ export class AppController {
     nconf.set("height", this.height);
     await this.saveConf();
 
+    this.width = nconf.get("width");
+    this.height = nconf.get("height");
+
     try {
       await this.stopTcp();
       await this.startTcp();
     } catch (ex) {
-      console.error(''+ex);
+      console.error("" + ex);
     }
-    console.log('set will return true');
+    console.log("set will return true");
 
     res.json({
       check: true,
       ip,
+      width: this.width,
+      height: this.height
     });
   }
 
@@ -194,11 +200,9 @@ export class AppController {
     commend = `sh /home/pi/oga-api-server/restart.sh`;
     await this.runCommend(commend);
     res.json({
-      check: true
+      check: true,
     });
   }
-
-
 
   runCommend(commend: string) {
     return new Promise((resolve, reject) => {
@@ -209,7 +213,7 @@ export class AppController {
           console.log("exec error: " + error);
           resolve(false);
         } else {
-          console.log('done commend!!!!');
+          console.log("done commend!!!!");
           resolve(true);
         }
       });
