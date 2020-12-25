@@ -7,6 +7,7 @@ const led = new Gpio(21, "out");
 const fs = require("fs");
 const nconf = require("nconf");
 const confPath = "/home/pi/oga-api-server/config.json";
+const logPath = "/home/pi/oga-api-server/log.txt";
 
 @Controller()
 export class AppController {
@@ -57,7 +58,7 @@ export class AppController {
 
     try {
       // const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-      const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+      const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > ${logPath} 2>&1 &`;
       console.log("commend =", commend);
       const result = await this.runCommend(commend);
     } catch (ex) {
@@ -179,8 +180,10 @@ export class AppController {
   @Get("update")
   async update(@Req() req, @Res() res) {
     console.log("update");
-    let commend = `sh /home/pi/oga-api-server/update.sh`;
 
+    await this.stopTcp();
+
+    let commend = `sh /home/pi/oga-api-server/update.sh`;
     const result = await this.runCommend(commend);
     res.json({
       check: true,
@@ -194,6 +197,8 @@ export class AppController {
       check: true
     });
   }
+
+
 
   runCommend(commend: string) {
     return new Promise((resolve, reject) => {
