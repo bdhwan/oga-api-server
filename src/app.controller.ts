@@ -6,12 +6,12 @@ const Gpio = require("onoff").Gpio; // Gpio class
 const led = new Gpio(21, "out");
 const fs = require("fs");
 const nconf = require("nconf");
+const confPath = "/home/pi/oga-api-server/config.json";
+
 @Controller()
 export class AppController {
   width = 640;
   height = 480;
-
-  confPath = "/home/pi/oga-api-server/config.json";
 
   // ps -ef | grep -v grep | grep test-launch
   constructor(private readonly appService: AppService) {
@@ -22,7 +22,7 @@ export class AppController {
     nconf
       .argv()
       .env()
-      .file({ file: this.confPath });
+      .file({ file: confPath });
 
     const ledResult = await led.read();
     console.log("ledResult", ledResult);
@@ -31,7 +31,7 @@ export class AppController {
 
   async saveConf() {
     nconf.save(function(err) {
-      fs.readFile(this.confPath, function(err, data) {
+      fs.readFile(confPath, function(err, data) {
         console.dir(JSON.parse(data.toString()));
       });
     });
