@@ -61,13 +61,13 @@ export class AppController {
     );
 
     await led.write(0);
-
-
     try {
       const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
       console.log("commend =", commend);  
       const result = await this.runCommend(commend);
-    } catch (ex) {}
+    } catch (ex) {
+      console.log('startTcp ex =',ex);
+    }
 
     await led.write(1);
     return true;
