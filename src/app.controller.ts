@@ -18,22 +18,16 @@ export class AppController {
   async startServer() {
     const ledResult = await led.read();
     console.log("ledResult", ledResult);
-    await led.write(1);
-    this.startTcp();
+    await this.startTcp();
   }
 
   async startTcp() {
+    await led.write(0);
     const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-    exec(commend, function(error, stdout, stderr) {
-      console.log("stdout: " + stdout);
-      console.log("stderr: " + stderr);
-      if (error !== null) {
-        console.log("exec error: " + error);
-      }
-    });
+    const result = await this.runCommend(commend);
+    await led.write(1);
+    return true;
   }
-  
-
 
   async startUdp(ip: string) {
     // .then(value => led.write(value ^ 1))
@@ -52,7 +46,6 @@ export class AppController {
       }
     });
   }
-
 
   stopVideo() {
     led.write(0);
@@ -154,6 +147,40 @@ export class AppController {
     res.json({
       check: true,
       ip,
+    });
+  }
+
+  @Get("update")
+  async update(@Req() req, @Res() res) {
+
+    let commend = `sh /home/pi/oga-api-server/update.sh`;
+    
+    const result = await this.runCommend(commend);
+    res.json({
+      check: true,
+      result
+    });
+
+    await led.write(0);
+    commend = `sh /home/pi/oga-api-server/restart.sh`;
+    await this.runCommend(commend);
+
+  }
+
+  runCommend(commend: string) {
+    led.write(0);
+    return new Promise((resolve, reject) => {
+      console.log("will stopVideo");
+      exec(commend, function(error, stdout, stderr) {
+        console.log("stdout: " + stdout);
+        console.log("stderr: " + stderr);
+        if (error !== null) {
+          console.log("exec error: " + error);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
     });
   }
 }
