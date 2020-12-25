@@ -64,6 +64,8 @@ export class AppController {
       console.log("startTcp ex =", ex);
     }
 
+    console.log('startTcp will return true');
+
     await led.write(1);
     return true;
   }
@@ -77,6 +79,8 @@ export class AppController {
     } catch (ex) {
       console.log("startTcp ex =", ex);
     }
+    console.log('stopTcp will return true');
+
     return true;
   }
 
@@ -137,8 +141,9 @@ export class AppController {
       await this.stopTcp();
       await this.startTcp();
     } catch (ex) {
-      console.error(ex);
+      console.error(''+ex);
     }
+    console.log('set will return true');
 
     res.json({
       check: true,
@@ -185,6 +190,9 @@ export class AppController {
     await led.write(0);
     commend = `sh /home/pi/oga-api-server/restart.sh`;
     await this.runCommend(commend);
+    res.json({
+      check: true
+    });
   }
 
   runCommend(commend: string) {
@@ -196,6 +204,7 @@ export class AppController {
           console.log("exec error: " + error);
           resolve(false);
         } else {
+          console.log('done commend!!!!');
           resolve(true);
         }
       });
