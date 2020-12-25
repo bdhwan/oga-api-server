@@ -29,10 +29,13 @@ export class AppController {
     await this.startTcp();
   }
 
-  async saveConf() {
-    nconf.save(function(err) {
-      fs.readFile(confPath, function(err, data) {
-        console.dir(JSON.parse(data.toString()));
+  saveConf() {
+    return new Promise((resolve, reject) => {
+      nconf.save(function(err) {
+        fs.readFile(confPath, function(err, data) {
+          console.dir(JSON.parse(data.toString()));
+          resolve(true);
+        });
       });
     });
   }
@@ -159,10 +162,13 @@ export class AppController {
     console.log("will set =", this.width, this.height);
     nconf.set("width", this.width);
     nconf.set("height", this.height);
+    await this.saveConf();
 
-    this.saveConf();
-
-    await this.startTcp();
+    try {
+      await this.startTcp();
+    } catch (ex) {
+      console.error(ex);
+    }
 
     res.json({
       check: true,
@@ -216,7 +222,6 @@ export class AppController {
   runCommend(commend: string) {
     led.write(0);
     return new Promise((resolve, reject) => {
-      console.log("will stopVideo");
       exec(commend, function(error, stdout, stderr) {
         console.log("stdout: " + stdout);
         console.log("stderr: " + stderr);
