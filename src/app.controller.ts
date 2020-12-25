@@ -26,6 +26,7 @@ export class AppController {
 
     const ledResult = await led.read();
     console.log("ledResult", ledResult);
+    await this.stopTcp();
     await this.startTcp();
   }
 
@@ -50,62 +51,33 @@ export class AppController {
 
     this.width = nconf.get("width");
     this.height = nconf.get("height");
-
-    //
-    // Get the entire database object from nconf. This will output
-    // { host: '127.0.0.1', port: 5984 }
-    //
-
     console.log(
       "will startTcp width =" + this.width + ", height=" + this.height
     );
 
-    await led.write(0);
     try {
-      const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-      console.log("commend =", commend);  
+      // const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+      const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+      console.log("commend =", commend);
       const result = await this.runCommend(commend);
     } catch (ex) {
-      console.log('startTcp ex =',ex);
+      console.log("startTcp ex =", ex);
     }
 
     await led.write(1);
     return true;
-
   }
 
-  async startUdp(ip: string) {
-    // .then(value => led.write(value ^ 1))
-    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-    // /test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 awb-mode=tungsten preview=false ! video/x-h264, width=640, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"
-    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-
-    const commend = `ps -ef | grep 'gst-launch-1.0' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && raspivid -t 999999 -h 720 -w 1080 -fps 25 -b 2000000 -o - | gst-launch-1.0 -v fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=${ip} port=5000`;
-    console.log("will start", commend);
-    exec(commend, function(error, stdout, stderr) {
-      console.log("stdout: " + stdout);
-      console.log("stderr: " + stderr);
-      if (error !== null) {
-        console.log("exec error: " + error);
-      }
-    });
-  }
-
-  stopVideo() {
+  async stopTcp() {
     led.write(0);
-    return new Promise((resolve, reject) => {
-      console.log("will stopVideo");
-      const commend = `ps -ef | grep 'gst-launch-1.0' | grep -v grep | awk '{print $2}' | xargs -r kill -9`;
-      exec(commend, function(error, stdout, stderr) {
-        console.log("stdout: " + stdout);
-        console.log("stderr: " + stderr);
-        if (error !== null) {
-          console.log("exec error: " + error);
-        }
-        resolve(true);
-      });
-    });
+    try {
+      const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9`;
+      console.log("commend =", commend);
+      const result = await this.runCommend(commend);
+    } catch (ex) {
+      console.log("startTcp ex =", ex);
+    }
+    return true;
   }
 
   @Get()
@@ -127,7 +99,7 @@ export class AppController {
   @Get("start")
   start(@Res() res) {
     console.log("will return");
-    // this.startVideo();
+    this.startTcp();
     res.json({
       check: true,
     });
@@ -135,7 +107,7 @@ export class AppController {
 
   @Get("stop")
   async stop(@Res() res) {
-    await this.stopVideo();
+    await this.stopTcp();
     res.json({
       check: true,
     });
@@ -153,12 +125,7 @@ export class AppController {
     if (!ip) {
       ip = req.query.ip;
     }
-    // try {
-    //   await this.stopVideo();
-    // } catch (ex) {
-    //   console.log("ex!!");
-    // }
-    // await this.startVideo(ip);
+
     this.width = req.query.width;
     this.height = req.query.height;
     console.log("will set =", this.width, this.height);
@@ -167,6 +134,7 @@ export class AppController {
     await this.saveConf();
 
     try {
+      await this.stopTcp();
       await this.startTcp();
     } catch (ex) {
       console.error(ex);
@@ -213,16 +181,13 @@ export class AppController {
       check: true,
       result,
     });
-
     console.log("will restart");
-
     await led.write(0);
     commend = `sh /home/pi/oga-api-server/restart.sh`;
     await this.runCommend(commend);
   }
 
   runCommend(commend: string) {
-    led.write(0);
     return new Promise((resolve, reject) => {
       exec(commend, function(error, stdout, stderr) {
         console.log("stdout: " + stdout);
@@ -236,4 +201,41 @@ export class AppController {
       });
     });
   }
+
+  /**
+
+  async startUdp(ip: string) {
+    // .then(value => led.write(value ^ 1))
+    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+    // /test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 awb-mode=tungsten preview=false ! video/x-h264, width=640, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"
+    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+
+    const commend = `ps -ef | grep 'gst-launch-1.0' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && raspivid -t 999999 -h 720 -w 1080 -fps 25 -b 2000000 -o - | gst-launch-1.0 -v fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=${ip} port=5000`;
+    console.log("will start", commend);
+    exec(commend, function(error, stdout, stderr) {
+      console.log("stdout: " + stdout);
+      console.log("stderr: " + stderr);
+      if (error !== null) {
+        console.log("exec error: " + error);
+      }
+    });
+  }
+
+  stopVideo() {
+    led.write(0);
+    return new Promise((resolve, reject) => {
+      console.log("will stopVideo");
+      const commend = `ps -ef | grep 'gst-launch-1.0' | grep -v grep | awk '{print $2}' | xargs -r kill -9`;
+      exec(commend, function(error, stdout, stderr) {
+        console.log("stdout: " + stdout);
+        console.log("stderr: " + stderr);
+        if (error !== null) {
+          console.log("exec error: " + error);
+        }
+        resolve(true);
+      });
+    });
+  }
+   */
 }
