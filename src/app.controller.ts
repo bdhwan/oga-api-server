@@ -11,8 +11,8 @@ const logPath = "/home/pi/oga-api-server/log.txt";
 
 @Controller()
 export class AppController {
-  width = 800;
-  height = 500;
+  width = 500;
+  height = 320;
   start_id = 0;
 
   // ps -ef | grep -v grep | grep test-launch
@@ -45,10 +45,10 @@ export class AppController {
 
   async startTcp() {
     if (!nconf.get("width")) {
-      nconf.set("width", 800);
+      nconf.set("width", 500);
     }
     if (!nconf.get("height")) {
-      nconf.set("height", 500);
+      nconf.set("height", 320);
     }
 
     this.width = nconf.get("width");
@@ -60,6 +60,8 @@ export class AppController {
     );
 
     try {
+
+     
       // const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
       const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > ${logPath} 2>&1 &`;
       console.log("commend =", commend);
