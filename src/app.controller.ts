@@ -6,14 +6,14 @@ const Gpio = require("onoff").Gpio; // Gpio class
 const led = new Gpio(21, "out");
 const fs = require("fs");
 const nconf = require("nconf");
-const confPath = "/home/pi/oga-api-server/config.json";
-const logPath = "/home/pi/oga-api-server/log.txt";
+const confPath = "/home/bdhwan/oga-api-server/config.json";
+const logPath = "/home/bdhwan/oga-api-server/log.txt";
 
 @Controller()
 export class AppController {
 
-  width = 760;
-  height = 560;
+  width = 1280;
+  height = 720;
 
   // ps -ef | grep -v grep | grep test-launch
   constructor(private readonly appService: AppService) {
@@ -58,8 +58,15 @@ export class AppController {
     );
 
     try {
-      // const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-      const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc -rot 90 bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > ${logPath} 2>&1 &`;
+
+      // ./test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=640, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"
+      // /home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > /home/bdhwan/oga-api-server/log.txt
+
+
+      // const commend = `ps -ef | grep 'test-launch' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && /home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+      // const commend = `/home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=1 "( rpicamsrc -rot 90 bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > ${logPath} 2>&1 &`;
+      const commend =`/home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 preview=false ! video/x-h264, width=${this.width}, height=${this.height}, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )" > /home/bdhwan/oga-api-server/log.txt`;
+      
       console.log("commend =", commend);
       const result = await this.runCommend(commend);
     } catch (ex) {
@@ -189,7 +196,7 @@ export class AppController {
 
     await this.stopTcp();
 
-    let commend = `sh /home/pi/oga-api-server/update.sh`;
+    let commend = `sh /home/bdhwan/oga-api-server/update.sh`;
     const result = await this.runCommend(commend);
     res.json({
       check: true,
@@ -197,7 +204,7 @@ export class AppController {
     });
     console.log("will restart");
     await led.write(0);
-    commend = `sh /home/pi/oga-api-server/restart.sh`;
+    commend = `sh /home/bdhwan/oga-api-server/restart.sh`;
     await this.runCommend(commend);
     res.json({
       check: true,
@@ -224,10 +231,10 @@ export class AppController {
 
   async startUdp(ip: string) {
     // .then(value => led.write(value ^ 1))
-    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
-    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+    // const commend = `/home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+    // const commend = `/home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
     // /test-launch --gst-debug=3 "( rpicamsrc bitrate=8000000 awb-mode=tungsten preview=false ! video/x-h264, width=640, height=480, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"
-    // const commend = `/home/pi/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
+    // const commend = `/home/bdhwan/gst-rtsp-server-1.14.4/examples/test-launch --gst-debug=3 "( rpicamsrc bitrate=800000  preview=false ! video/x-h264, width=1350, height=720, framerate=30/1 ! h264parse ! rtph264pay name=pay0 pt=96 )"`;
 
     const commend = `ps -ef | grep 'gst-launch-1.0' | grep -v grep | awk '{print $2}' | xargs -r kill -9 && sleep 3 && raspivid -t 999999 -h 720 -w 1080 -fps 25 -b 2000000 -o - | gst-launch-1.0 -v fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=${ip} port=5000`;
     console.log("will start", commend);
